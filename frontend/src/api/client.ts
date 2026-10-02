@@ -8,12 +8,14 @@
 
 export interface User {
   id: number;
+  username: string;
   email: string;
   first_name: string;
   last_name: string;
 }
 
 export interface RegisterData {
+  username: string;
   email: string;
   password: string;
   first_name?: string;
@@ -79,8 +81,9 @@ export const api = {
     }
   },
 
-  login(email: string, password: string): Promise<User> {
-    return request<User>('/api/auth/login/', { method: 'POST', body: JSON.stringify({ email, password }) });
+  /** `identifier` is either the e-mail address or the username. */
+  login(identifier: string, password: string): Promise<User> {
+    return request<User>('/api/auth/login/', { method: 'POST', body: JSON.stringify({ identifier, password }) });
   },
 
   register(data: RegisterData): Promise<User> {

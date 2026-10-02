@@ -6,7 +6,7 @@ proxy with automatic Let's Encrypt HTTPS certificates.
 
 **Features so far**
 
-- Registration, login and logout with e-mail address and password (session cookies + CSRF protection)
+- Registration, login and logout. Users log in with their **username or e-mail address** and a password (session cookies + CSRF protection)
 - Protected "Mein Konto" (my account) page
 - Landing page with an interactive map of Germany ([Leaflet](https://leafletjs.com/) + [OpenStreetMap](https://www.openstreetmap.org/))
 - Django admin at `/admin/`
@@ -22,6 +22,7 @@ The user interface is in German.
 1. [Architecture](#architecture)
 2. [Prerequisites](#prerequisites)
 3. [Quick start (development)](#quick-start-development)
+   - [VS Code tasks](#vs-code-tasks)
 4. [Configuration](#configuration)
 5. [Production deployment with HTTPS](#production-deployment-with-https)
 6. [Testing and the TDD workflow](#testing-and-the-tdd-workflow)
@@ -63,6 +64,10 @@ stored in the browser and no CORS configuration is required.
 1. The SPA calls `GET /api/auth/csrf/`, which sets the `csrftoken` cookie.
 2. Every `POST` sends that value in the `X-CSRFToken` header.
 3. Login and registration create a Django session (`sessionid` cookie, `HttpOnly`).
+   The login field accepts a username or an e-mail address, both case-insensitive.
+   Input containing `@` is looked up as an e-mail address, anything else as a username.
+   Usernames may only contain letters, digits and `. + - _`, so they never contain `@`.
+   The same rule applies to the Django admin login (`accounts/backends.py`).
 4. `GET /api/auth/me/` tells the SPA who is logged in (403 when anonymous).
 
 Login and registration are rate-limited per client IP (`AUTH_THROTTLE_RATE`).
@@ -87,16 +92,36 @@ cp .env.example .env
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
-Then open **http://localhost:8080**.
+Then open **http://localhost:3005**.
 
 The development override (`docker-compose.dev.yml`):
 
 - runs Django with `runserver` and auto-reload; `./backend` is mounted into the container
 - runs the Vite dev server with hot module replacement; `./frontend` is mounted
-- serves everything through nginx over plain HTTP on `DEV_HTTP_PORT` (default 8080)
+- serves everything through nginx over plain HTTP on `DEV_HTTP_PORT` (default 3005)
 - exposes Postgres on `localhost:POSTGRES_HOST_PORT` (default 5432)
 - turns on `DJANGO_DEBUG` and disables the `Secure` cookie flag
 - disables certbot
+
+### VS Code tasks
+
+The repository includes [.vscode/tasks.json](.vscode/tasks.json). To run a task, open
+**Terminal → Run Task…** or press `Ctrl+Shift+P` and choose **Tasks: Run Task**.
+
+| Task | What it does |
+|------|--------------|
+| **Dev: Start everything** | Starts the development stack in the foreground at http://localhost:3005. Stop it with `Ctrl+C`. |
+| Dev: Stop / Dev: Show logs | Stops the development stack, or follows its logs. |
+| **Docker: Build production images** | `docker compose build` for backend and nginx, including the React production build. This is the default build task (`Ctrl+Shift+B`). |
+| Docker: Build development images | Builds the backend image with the test tools. |
+| Prod: Start locally / Prod: Stop | Runs the production setup on https://localhost with a self-signed certificate. |
+| **Test: All** | Runs the backend tests, then the frontend tests. This is the default test task. |
+| Test: Backend / Test: Frontend / Test: Frontend (watch) | Runs a single test suite. |
+| Frontend: Typecheck & build | Runs `npm run build`. TypeScript errors appear in the Problems panel. |
+| Django: Make migrations / Django: Create superuser | Management commands, run in the development backend image. |
+
+The development and production stacks use the same containers, so only one of
+them can run at a time. Stop one before starting the other.
 
 Create an admin account for `/admin/`:
 
@@ -126,7 +151,7 @@ All settings are environment variables in `.env` (template: [.env.example](.env.
 | `LETSENCRYPT_STAGING` | `0`                  | `1` = use the Let's Encrypt staging CA for test runs (untrusted certificates, much higher rate limits). |
 | `HTTP_PORT`           | `80`                 | Host port for HTTP in production. |
 | `HTTPS_PORT`          | `443`                | Host port for HTTPS in production. |
-| `DEV_HTTP_PORT`       | `8080`               | Host port of the development stack. |
+| `DEV_HTTP_PORT`       | `3005`               | Host port of the development stack. |
 
 ### PostgreSQL
 
@@ -147,7 +172,7 @@ when Django runs outside Docker.
 | `DJANGO_SECRET_KEY`           | –                                         | **Required, keep it secret.** Generate: `python -c "import secrets; print(secrets.token_urlsafe(50))"` |
 | `DJANGO_DEBUG`                | `false`                                   | Never set `true` in production. |
 | `DJANGO_ALLOWED_HOSTS`        | `localhost,127.0.0.1`                     | Comma-separated host names Django answers for. Must include `DOMAIN` (and its aliases). |
-| `DJANGO_CSRF_TRUSTED_ORIGINS` | `http://localhost:8080,https://localhost` | Comma-separated origins (`https://example.com`) allowed to send unsafe requests. |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | `http://localhost:3005,https://localhost` | Comma-separated origins (`https://example.com`) allowed to send unsafe requests. |
 | `DJANGO_SECURE_COOKIES`       | `true` unless `DEBUG`                     | Adds the `Secure` flag to the session and CSRF cookies. |
 | `DJANGO_LOG_LEVEL`            | `INFO`                                    | Root log level |
 | `DJANGO_LANGUAGE_CODE`        | `de-de`                                   | Language for validation messages and the admin |
@@ -288,8 +313,10 @@ docker compose run --rm backend pytest accounts/tests/test_auth_api.py -k login 
 
 | Test file                              | Covers |
 |----------------------------------------|--------|
-| `accounts/tests/test_models.py`        | Custom user model: e-mail as login, lower-casing, superuser |
-| `accounts/tests/test_auth_api.py`      | CSRF, registration, login, logout, `/me`, rate limiting |
+| `accounts/tests/test_models.py`        | Custom user model: e-mail/username uniqueness (case-insensitive), generated usernames, superuser |
+| `accounts/tests/test_backends.py`      | Authentication with username or e-mail address |
+| `accounts/tests/test_migrations.py`    | Data migration that gives existing accounts a username |
+| `accounts/tests/test_auth_api.py`      | CSRF, registration (incl. username rules), login with username or e-mail, logout, `/me`, rate limiting |
 | `core/tests/test_health.py`            | Health endpoint |
 | `core/tests/test_migrations.py`        | Fails when a model changed but no migration was created |
 
@@ -334,12 +361,12 @@ Unsafe methods (`POST`, …) require the `X-CSRFToken` header.
 |--------|------------------------|------|-------------|
 | GET    | `/api/health/`         | –    | `{"status":"ok","database":"ok"}`. Returns 503 if the database is unavailable. |
 | GET    | `/api/auth/csrf/`      | –    | Sets the `csrftoken` cookie. |
-| POST   | `/api/auth/register/`  | –    | Body: `email`, `password`, optional `first_name`, `last_name`. Returns 201 with the user and logs them in. |
-| POST   | `/api/auth/login/`     | –    | Body: `email`, `password`. Returns 200 with the user. Returns 400 for wrong credentials. |
+| POST   | `/api/auth/register/`  | –    | Body: `username`, `email`, `password`, optional `first_name`, `last_name`. Returns 201 with the user and logs them in. |
+| POST   | `/api/auth/login/`     | –    | Body: `identifier` (username or e-mail address), `password`. Returns 200 with the user. Returns 400 for wrong credentials. |
 | POST   | `/api/auth/logout/`    | yes  | Returns 204. |
 | GET    | `/api/auth/me/`        | yes  | The current user. Returns 403 when not logged in. |
 
-User object: `{ "id": 1, "email": "anna@example.com", "first_name": "Anna", "last_name": "Schmidt" }`
+User object: `{ "id": 1, "username": "anna", "email": "anna@example.com", "first_name": "Anna", "last_name": "Schmidt" }`
 
 Validation errors (status 400) map each field name to a list of messages, for
 example `{"email": ["…"]}`. General errors use the key `non_field_errors`.

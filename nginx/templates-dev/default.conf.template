@@ -5,7 +5,7 @@ upstream django {
 }
 
 upstream vite {
-    server frontend:5173;
+    server frontend:3005;
 }
 
 map $http_upgrade $connection_upgrade {

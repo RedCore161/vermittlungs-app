@@ -21,7 +21,7 @@ describe('api client', () => {
   });
 
   it('returns the current user', async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse({ id: 1, email: 'anna@example.com', first_name: '', last_name: '' }));
+    fetchMock.mockResolvedValueOnce(jsonResponse({ id: 1, username: 'anna', email: 'anna@example.com', first_name: '', last_name: '' }));
 
     const user = await api.getCurrentUser();
 
@@ -41,17 +41,17 @@ describe('api client', () => {
         document.cookie = 'csrftoken=token-123; path=/';
         return jsonResponse({ detail: 'ok' });
       }
-      return jsonResponse({ id: 1, email: 'anna@example.com', first_name: '', last_name: '' });
+      return jsonResponse({ id: 1, username: 'anna', email: 'anna@example.com', first_name: '', last_name: '' });
     });
 
-    await api.login('anna@example.com', 'secret');
+    await api.login('anna', 'secret');
 
     expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/auth/csrf/', expect.anything());
     const [url, init] = fetchMock.mock.calls[1];
     expect(url).toBe('/api/auth/login/');
     expect(init.method).toBe('POST');
     expect(new Headers(init.headers).get('X-CSRFToken')).toBe('token-123');
-    expect(JSON.parse(init.body)).toEqual({ email: 'anna@example.com', password: 'secret' });
+    expect(JSON.parse(init.body)).toEqual({ identifier: 'anna', password: 'secret' });
   });
 
   it('reuses an existing CSRF cookie', async () => {
@@ -69,7 +69,7 @@ describe('api client', () => {
     fetchMock.mockResolvedValueOnce(jsonResponse({ email: ['Ein Konto existiert bereits.'] }, 400));
 
     const error = await api
-      .register({ email: 'anna@example.com', password: 'S3cure-pass!' })
+      .register({ username: 'anna', email: 'anna@example.com', password: 'S3cure-pass!' })
       .catch((e: unknown) => e);
 
     expect(error).toBeInstanceOf(ApiError);

@@ -12,25 +12,37 @@ describe('LoginPage', () => {
     const calls = mockApi(null);
     const { user } = renderApp('/login');
 
-    await user.type(await screen.findByLabelText('E-Mail-Adresse'), 'anna@example.com');
+    await user.type(await screen.findByLabelText('Benutzername oder E-Mail-Adresse'), 'anna@example.com');
     await user.type(screen.getByLabelText('Passwort'), 'S3cure-pass!');
     await user.click(screen.getByRole('button', { name: 'Anmelden' }));
 
     expect(calls.login).toHaveBeenCalledWith('anna@example.com', 'S3cure-pass!');
     expect(await screen.findByRole('region', { name: /karte von deutschland/i })).toBeInTheDocument();
-    expect(within(screen.getByRole('navigation')).getByText(testUser.email)).toBeInTheDocument();
+    expect(within(screen.getByRole('navigation')).getByText(testUser.username)).toBeInTheDocument();
+  });
+
+  it('logs the user in with the username', async () => {
+    const calls = mockApi(null);
+    const { user } = renderApp('/login');
+
+    await user.type(await screen.findByLabelText('Benutzername oder E-Mail-Adresse'), 'anna');
+    await user.type(screen.getByLabelText('Passwort'), 'S3cure-pass!');
+    await user.click(screen.getByRole('button', { name: 'Anmelden' }));
+
+    expect(calls.login).toHaveBeenCalledWith('anna', 'S3cure-pass!');
+    expect(await screen.findByRole('region', { name: /karte von deutschland/i })).toBeInTheDocument();
   });
 
   it('shows the error message for invalid credentials', async () => {
     const calls = mockApi(null);
-    calls.login.mockRejectedValueOnce(new ApiError(400, { non_field_errors: ['E-Mail-Adresse oder Passwort ist falsch.'] }));
+    calls.login.mockRejectedValueOnce(new ApiError(400, { non_field_errors: ['Benutzername/E-Mail-Adresse oder Passwort ist falsch.'] }));
     const { user } = renderApp('/login');
 
-    await user.type(await screen.findByLabelText('E-Mail-Adresse'), 'anna@example.com');
+    await user.type(await screen.findByLabelText('Benutzername oder E-Mail-Adresse'), 'anna@example.com');
     await user.type(screen.getByLabelText('Passwort'), 'wrong');
     await user.click(screen.getByRole('button', { name: 'Anmelden' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('E-Mail-Adresse oder Passwort ist falsch.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Benutzername/E-Mail-Adresse oder Passwort ist falsch.');
     expect(screen.getByRole('heading', { name: 'Anmelden' })).toBeInTheDocument();
   });
 
@@ -38,7 +50,7 @@ describe('LoginPage', () => {
     mockApi(null);
     const { user } = renderApp('/konto');
 
-    await user.type(await screen.findByLabelText('E-Mail-Adresse'), 'anna@example.com');
+    await user.type(await screen.findByLabelText('Benutzername oder E-Mail-Adresse'), 'anna@example.com');
     await user.type(screen.getByLabelText('Passwort'), 'S3cure-pass!');
     await user.click(screen.getByRole('button', { name: 'Anmelden' }));
 

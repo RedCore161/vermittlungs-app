@@ -1,0 +1,129 @@
+{
+  // Run with: Terminal > Run Task... (or Ctrl+Shift+P > "Tasks: Run Task").
+  // "Test: All" is the default test task (Ctrl+Shift+P > "Tasks: Run Test Task").
+  // Dev tasks select both compose files via COMPOSE_FILE (":" works as separator on every OS).
+  "version": "2.0.0",
+  "tasks": [
+    // --- Development (http://localhost:3005) ---------------------------------
+    {
+      "label": "Dev: Start everything",
+      "detail": "Postgres, Django (auto-reload), Vite (HMR) and nginx on http://localhost:3005",
+      "type": "shell",
+      "command": "docker compose up --build",
+      "options": { "env": { "COMPOSE_FILE": "docker-compose.yml:docker-compose.dev.yml", "COMPOSE_PATH_SEPARATOR": ":" } },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "panel": "dedicated", "clear": true }
+    },
+    {
+      "label": "Dev: Stop",
+      "type": "shell",
+      "command": "docker compose down",
+      "options": { "env": { "COMPOSE_FILE": "docker-compose.yml:docker-compose.dev.yml", "COMPOSE_PATH_SEPARATOR": ":" } },
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: Show logs",
+      "type": "shell",
+      "command": "docker compose logs -f --tail 200",
+      "options": { "env": { "COMPOSE_FILE": "docker-compose.yml:docker-compose.dev.yml", "COMPOSE_PATH_SEPARATOR": ":" } },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "panel": "dedicated" }
+    },
+
+    // --- Docker builds --------------------------------------------------------
+    {
+      "label": "Docker: Build development images",
+      "type": "shell",
+      "command": "docker compose build",
+      "options": { "env": { "COMPOSE_FILE": "docker-compose.yml:docker-compose.dev.yml", "COMPOSE_PATH_SEPARATOR": ":" } },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Docker: Build production images",
+      "detail": "Builds backend and nginx (incl. the React production build)",
+      "type": "shell",
+      "command": "docker compose -f docker-compose.yml build",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    },
+
+    // --- Production stack locally (https://localhost, self-signed) -------------
+    {
+      "label": "Prod: Start locally",
+      "detail": "Production setup on https://localhost (self-signed certificate)",
+      "type": "shell",
+      "command": "docker compose -f docker-compose.yml up -d --build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Prod: Stop",
+      "type": "shell",
+      "command": "docker compose -f docker-compose.yml down",
+      "problemMatcher": []
+    },
+
+    // --- Tests ----------------------------------------------------------------
+    {
+      "label": "Test: Backend",
+      "detail": "pytest in the backend container against Postgres",
+      "type": "shell",
+      "command": "docker compose run --rm --build backend pytest",
+      "options": { "env": { "COMPOSE_FILE": "docker-compose.yml:docker-compose.dev.yml", "COMPOSE_PATH_SEPARATOR": ":" } },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Test: Frontend",
+      "detail": "Vitest + React Testing Library",
+      "type": "shell",
+      "command": "npm install --no-audit --no-fund && npm test",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Test: Frontend (watch)",
+      "type": "shell",
+      "command": "npm run test:watch",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "panel": "dedicated" }
+    },
+    {
+      "label": "Test: All",
+      "dependsOn": ["Test: Backend", "Test: Frontend"],
+      "dependsOrder": "sequence",
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Frontend: Typecheck & build",
+      "type": "shell",
+      "command": "npm run build",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "group": "build",
+      "problemMatcher": ["$tsc"]
+    },
+
+    // --- Django management ------------------------------------------------------
+    {
+      "label": "Django: Make migrations",
+      "type": "shell",
+      "command": "docker compose run --rm backend python manage.py makemigrations",
+      "options": { "env": { "COMPOSE_FILE": "docker-compose.yml:docker-compose.dev.yml", "COMPOSE_PATH_SEPARATOR": ":" } },
+      "problemMatcher": []
+    },
+    {
+      "label": "Django: Create superuser",
+      "type": "shell",
+      "command": "docker compose run --rm backend python manage.py createsuperuser",
+      "options": { "env": { "COMPOSE_FILE": "docker-compose.yml:docker-compose.dev.yml", "COMPOSE_PATH_SEPARATOR": ":" } },
+      "problemMatcher": [],
+      "presentation": { "focus": true }
+    }
+  ]
+}

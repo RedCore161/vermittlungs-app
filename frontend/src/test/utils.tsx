@@ -6,7 +6,13 @@ import { AppRoutes } from '../App';
 import { api, type User } from '../api/client';
 import { AuthProvider } from '../auth/AuthContext';
 
-export const testUser: User = { id: 1, email: 'anna@example.com', first_name: 'Anna', last_name: 'Schmidt' };
+export const testUser: User = {
+  id: 1,
+  username: 'anna',
+  email: 'anna@example.com',
+  first_name: 'Anna',
+  last_name: 'Schmidt',
+};
 
 /** Stubs every API call; `currentUser` controls the initial login state. */
 export function mockApi(currentUser: User | null = null) {

@@ -1,6 +1,6 @@
 import type { LatLngBoundsExpression, LatLngTuple } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MapContainer, TileLayer } from 'react-leaflet';
+import { AttributionControl, MapContainer, TileLayer } from 'react-leaflet';
 import { mapConfig } from '../config';
 
 /** Geographic centre of Germany (near Niederdorla, Thuringia). */
@@ -18,13 +18,16 @@ const MAX_BOUNDS: LatLngBoundsExpression = [
   [57.0, 19.0],
 ];
 
+/** Leaflet credit without the flag icon Leaflet adds to its default prefix. */
+const ATTRIBUTION_PREFIX = '<a href="https://leafletjs.com" title="A JavaScript library for interactive maps">Leaflet</a>';
+
 interface GermanyMapProps {
   className?: string;
 }
 
 export function GermanyMap({ className }: GermanyMapProps) {
   return (
-    <section className={className ?? 'germany-map'} aria-label="Karte von Deutschland">
+    <section className={['germany-map', className].filter(Boolean).join(' ')} aria-label="Karte von Deutschland">
       <MapContainer
         bounds={GERMANY_BOUNDS}
         maxBounds={MAX_BOUNDS}
@@ -32,8 +35,9 @@ export function GermanyMap({ className }: GermanyMapProps) {
         minZoom={5}
         maxZoom={18}
         scrollWheelZoom
-        style={{ height: '100%', width: '100%' }}
+        attributionControl={false}
       >
+        <AttributionControl prefix={ATTRIBUTION_PREFIX} />
         <TileLayer url={mapConfig.tileUrl} attribution={mapConfig.attribution} />
       </MapContainer>
     </section>

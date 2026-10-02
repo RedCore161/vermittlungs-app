@@ -27,4 +27,12 @@ describe('GermanyMap', () => {
     expect(container.querySelector('.leaflet-container')).not.toBeNull();
     expect(screen.getByText(/openstreetmap/i)).toBeInTheDocument();
   });
+
+  it('credits Leaflet without the default flag icon', () => {
+    const { container } = render(<GermanyMap />);
+
+    const attribution = container.querySelector('.leaflet-control-attribution');
+    expect(attribution).toHaveTextContent(/Leaflet/);
+    expect(attribution?.querySelector('svg')).toBeNull();
+  });
 });

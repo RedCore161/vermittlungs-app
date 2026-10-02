@@ -33,7 +33,7 @@ DEBUG = env_bool("DJANGO_DEBUG", False)
 SECRET_KEY = env("DJANGO_SECRET_KEY", "insecure-dev-key-change-me" if DEBUG else None, required=True)
 
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
-CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", "http://localhost:8080,https://localhost")
+CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", "http://localhost:3005,https://localhost")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -90,6 +90,9 @@ DATABASES = {
 }
 
 AUTH_USER_MODEL = "accounts.User"
+
+# Log in with e-mail address or username (API and Django admin).
+AUTHENTICATION_BACKENDS = ["accounts.backends.EmailOrUsernameBackend"]
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

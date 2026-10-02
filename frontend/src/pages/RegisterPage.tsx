@@ -4,7 +4,7 @@ import { ApiError, type FieldErrors } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { FormField } from '../components/FormField';
 
-const EMPTY_FORM = { first_name: '', last_name: '', email: '', password: '', password_confirm: '' };
+const EMPTY_FORM = { first_name: '', last_name: '', username: '', email: '', password: '', password_confirm: '' };
 
 export function RegisterPage() {
   const { register } = useAuth();
@@ -31,6 +31,7 @@ export function RegisterPage() {
     setSubmitting(true);
     try {
       await register({
+        username: form.username.trim(),
         email: form.email,
         password: form.password,
         first_name: form.first_name,
@@ -73,6 +74,17 @@ export function RegisterPage() {
             errors={fieldErrors.last_name}
           />
         </div>
+        <FormField
+          label="Benutzername"
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
+          required
+          maxLength={150}
+          value={form.username}
+          onChange={update('username')}
+          errors={fieldErrors.username}
+        />
         <FormField
           label="E-Mail-Adresse"
           type="email"

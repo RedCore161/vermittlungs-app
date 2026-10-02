@@ -29,7 +29,7 @@ describe('App', () => {
     const { user } = renderApp('/');
 
     const nav = await screen.findByRole('navigation');
-    expect(await within(nav).findByText(testUser.email)).toBeInTheDocument();
+    expect(await within(nav).findByText(testUser.username)).toBeInTheDocument();
 
     await user.click(within(nav).getByRole('button', { name: 'Abmelden' }));
 
@@ -49,7 +49,10 @@ describe('App', () => {
     renderApp('/konto');
 
     expect(await screen.findByRole('heading', { name: 'Mein Konto' })).toBeInTheDocument();
-    expect(screen.getByText('Anna Schmidt')).toBeInTheDocument();
+    const main = screen.getByRole('main');
+    expect(within(main).getByText('Anna Schmidt')).toBeInTheDocument();
+    expect(within(main).getByText('anna')).toBeInTheDocument();
+    expect(within(main).getByText('anna@example.com')).toBeInTheDocument();
   });
 
   it('shows a not found page for unknown routes', async () => {

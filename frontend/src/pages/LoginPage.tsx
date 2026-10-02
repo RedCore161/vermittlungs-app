@@ -10,7 +10,7 @@ export function LoginPage() {
   const location = useLocation();
   const redirectTo = (location.state as { from?: string } | null)?.from ?? '/';
 
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -20,7 +20,7 @@ export function LoginPage() {
     setError(null);
     setSubmitting(true);
     try {
-      await login(email, password);
+      await login(identifier.trim(), password);
       navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Anmeldung fehlgeschlagen. Bitte später erneut versuchen.');
@@ -38,12 +38,13 @@ export function LoginPage() {
       )}
       <form onSubmit={handleSubmit} noValidate>
         <FormField
-          label="E-Mail-Adresse"
-          type="email"
-          autoComplete="email"
+          label="Benutzername oder E-Mail-Adresse"
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
           required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
         />
         <FormField
           label="Passwort"

@@ -7,5 +7,7 @@ node_modules/
 frontend/dist/
 frontend/coverage/
 .idea/
-.vscode/
+.vscode/*
+!.vscode/tasks.json
+!.vscode/extensions.json
 *.log

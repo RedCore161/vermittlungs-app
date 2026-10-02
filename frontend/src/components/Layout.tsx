@@ -19,8 +19,8 @@ export function Layout() {
         <nav aria-label="Hauptnavigation">
           {loading ? null : user ? (
             <>
-              <NavLink to="/konto" className="user-email">
-                {user.email}
+              <NavLink to="/konto" className="user-name" title={user.email}>
+                {user.username}
               </NavLink>
               <button type="button" className="button button-secondary" onClick={handleLogout}>
                 Abmelden

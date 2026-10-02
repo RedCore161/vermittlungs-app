@@ -12,6 +12,8 @@ export function AccountPage() {
       <dl className="account-details">
         <dt>Name</dt>
         <dd>{fullName || '–'}</dd>
+        <dt>Benutzername</dt>
+        <dd>{user.username}</dd>
         <dt>E-Mail-Adresse</dt>
         <dd>{user.email}</dd>
       </dl>

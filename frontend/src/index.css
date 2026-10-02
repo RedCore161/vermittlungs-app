@@ -74,7 +74,7 @@ a {
   text-decoration: none;
 }
 
-.user-email {
+.user-name {
   color: var(--color-muted);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -142,9 +142,17 @@ a {
 }
 
 .germany-map {
+  position: relative;
   flex: 1;
   min-height: 420px;
   border-top: 1px solid var(--color-border);
+}
+
+/* The section's height comes from flexbox, so a percentage height on the map
+   would resolve to 0. Stretch the map over the section instead. */
+.germany-map .leaflet-container {
+  position: absolute;
+  inset: 0;
 }
 
 /* Forms */
